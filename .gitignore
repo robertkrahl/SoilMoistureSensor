@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# FreeCAD files
+*.fcstd1
+*.FCStd1
+*.FCStd2
+*.FCStd3

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="version" content="2021.04">
+<title>Soil Moisture Sensor A</title>
+<link rel="stylesheet" href="css/dialog.css">
+<link rel="stylesheet" href="css/footer.css">
+<link rel="stylesheet" href="css/navbar.css">
+<link rel="stylesheet" href="css/select.css">
+<link rel="stylesheet" href="css/switch.css">
+<script src="js/ui.js"></script>
+<script src="js/soilSensor.js"></script>
+<script src="js/pageWlan.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+input {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+input:hover {
+  border: 1px solid black;
+}
+
+th, td {
+  text-align: left;
+  padding: 16px;
+}
+
+td a:link, a:visited, a:active {
+  text-decoration: none;
+  color: black;
+}
+
+tr:nth-child(even), tr:nth-child(even) input {
+  background-color: #f2f2f2;
+}
+
+.delete {
+  position: relative;
+  float: right;
+  cursor: pointer;
+  padding: 12px 16px 12px 16px;
+}
+
+.delete:hover {
+  background-color: #f44336;
+  color: white;
+}
+
+.add {
+  position: relative;
+  float: right;
+  cursor: pointer;
+  padding: 12px 16px 12px 16px;
+}
+
+.add:hover {
+  background-color: #28a745;
+  color: white;
+}
+
+div.content {
+  margin-left: 200px;
+  padding: 1px 16px;
+  height: 1000px;
+  margin-bottom: 100px;
+}
+
+#wlan-client-scan-button, #update-button {
+  margin: 0px;
+  padding: 8px;
+  border-radius: 0px;
+}
+
+ul li span {
+  display: inline-block;
+  line-height: 100%;
+  vertical-align: middle;     
+}
+
+@media screen and (max-width: 600px) {
+  div.content {margin-left: 0;}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="myTopnav">
+  <a class="active" href="#overview">Sensor</a>
+  <a href="#overview" onclick="navSetResponsive()">Overview</a>
+  <a href="#sensor-data" onclick="navSetResponsive()">Data</a>
+  <a href="#system-settings" onclick="navSetResponsive()">Settings</a>
+  <a href="#wlan-settings" onclick="navSetResponsive()">WLAN</a>
+  <a href="#mqtt-settings" onclick="navSetResponsive()">MQTT</a>
+  <a href="#ota-settings" onclick="navSetResponsive()">Update</a>
+  <a href="#about" onclick="navSetResponsive()">About</a>
+  <a href="javascript:void(0);" class="icon" onclick="navSetResponsive()">&#9776;</a>
+</div>
+
+<div id="modal-dialog" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <div id="dialog-content"></div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="overview">
+    <h2>System Overview</h2>
+    <table>
+      <tr>
+        <td>Name</td>
+        <td class="jsondata" data="conf.device.name"></td>
+      </tr>
+      <tr>
+        <td>Model</td>
+        <td class="jsondata" data="conf.device.model"></td>
+      </tr>
+      <tr>
+        <td>Architecture</td>
+        <td class="jsondata" data="conf.system.architecture"></td>
+      </tr>
+      <tr>
+        <td>Serial Number</td>
+        <td class="jsondata" data="conf.system.serialNumber"></td>
+      </tr>
+      <tr>
+        <td>CPU Speed</td>
+        <td class="jsondata" data="conf.system.cpuSpeed"></td>
+      </tr>
+      <tr>
+        <td>Flash Size</td>
+        <td class="jsondata" data="conf.system.flashSize"></td>
+      </tr>
+      <tr>
+        <td>Flash Speed</td>
+        <td class="jsondata" data="conf.system.flashSpeed"></td>
+      </tr>
+      <tr>
+        <td>Free Heap</td>
+        <td class="jsondata" data="conf.system.heapFree"></td>
+      </tr>
+      <tr>
+        <td>Firmware Version</td>
+        <td class="jsondata" data="conf.system.version.firmware"></td>
+      </tr>
+      <tr>
+        <td>Boot Version</td>
+        <td class="jsondata" data="conf.system.version.boot"></td>
+      </tr>
+      <tr>
+        <td>Website Version</td>
+        <td class="jsondata" data="conf.system.version.website"></td>
+      </tr>
+  	</table>
+  </div>
+  <div id="sensor-data">
+    <h2>Sensor data</h2>
+    <table>
+      <tr>
+        <tr>
+          <td>Suppy Voltage</td>
+          <td id="voltage-supply"></td>
+        </tr>
+        <tr>
+            <td>Battery Voltage</td>
+            <td id="voltage-bat"></td>
+        </tr>
+        <tr>
+            <td>Solar Cell Voltage</td>
+            <td id="voltage-solar"></td>
+        </tr>
+        <tr>
+            <td>Soil Temperature</td>
+            <td id="temperature-soil"></td>
+        </tr>
+        <tr>
+            <td>Soil Moisture</td>
+            <td id="moisture-soil"></td>
+        </tr>
+    </table>
+    <h2>Sensor calibration</h2>
+    <table>
+      <tr>
+        <tr>
+          <td>Calibrate Air Value</td>
+          <td style="padding: 0px 16px 0px 16px">
+            <span class="footer-button" onclick="calibrateSensor('air')">Calibrate</span>
+          </td>
+        </tr>
+        <tr>
+            <td>Calibrate Water Value</td>
+            <td style="padding: 0px 16px 0px 16px">
+              <span class="footer-button" onclick="calibrateSensor('water')">Calibrate</span>
+            </td>
+        </tr>
+    </table>
+  </div>
+  <div id="system-settings">
+    <h2>System Settings and Information</h2>
+    <table>
+      <tr>
+        <td>Network Hostname</td>
+        <td><input type="text" onchange="dataChanged()" pattern="[a-zA-Z0-9-]+"
+          class="jsondata" data="conf.network.hostname"></td>
+      </tr>
+      <tr>
+        <td>Sleep Interval</td>
+        <td>
+          <select id="sleep-interval-select" onchange="dataChanged()" class="jsondata" data="conf.services.sleep.interval">
+            <option value="0">Off</option>
+            <option value="1">10 Minutes</option>
+            <option value="2">20 Minutes</option>
+            <option value="3">30 Minutes</option>
+            <option value="4">40 Minutes</option>
+            <option value="5">50 Minutes</option>
+            <option value="6">60 Minutes</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Debug</td>
+        <td style="padding: 0px 16px 0px 16px">
+          <label class="switch">
+            <input type="checkbox" onchange="dataChanged()" class="jsondata" data="conf.services.serial.enabled">
+            <span class="slider"></span>
+          </label>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div id="wlan-settings">
+    <h2>WLAN Settings and Information</h2>
+    <table>
+      <tr>
+        <td>Enable</td>
+        <td style="padding: 0px 16px 0px 16px">
+          <label class="switch">
+            <input type="checkbox" id="wlan-switch" onchange="wlanEnableChanged(this.checked)" class="jsondata" data="conf.network.wlan.enabled">
+            <span class="slider" id="wlan-slider"></span>
+          </label>
+        </td>
+      </tr>
+      <tr>
+        <td>WLAN Mode</td>
+        <td id="wlan-mode">
+            <select id="wlan-mode-select" onchange="wlanModeChanged(this.selectedIndex)" class="jsondata" data="conf.network.wlan.mode">
+              <option value="0">Client</option>
+              <option value="1">Access point</option>
+              <option value="2">Client and Access point</option>
+            </select>
+          </td>
+      </tr>
+      <tr>
+        <td>WLAN Mac Address</td>
+        <td class="jsondata" data="conf.network.wlan.macAddress"></td>
+      </tr>
+    </table>
+  </div>
+  <div id="wlan-client-settings">
+    <table id="connected-table" >
+      <tr>
+        <th>Connected WLAN Network</th>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Connected Network</td>
+        <td class="jsondata" data="conf.network.wlan.connectedAp"></td>
+      </tr>
+      <tr>
+        <td>IP Address</td>
+        <td class="jsondata" data="conf.network.wlan.dhcpAddress"></td>
+      </tr>
+      <tr>
+        <td>Subnet Mask</td>
+        <td class="jsondata" data="conf.network.wlan.dhcpSubnetMask"></td>
+      </tr>
+    </table>
+    <table id="wlan-client-network-db">
+      <tr>
+        <th>WLAN Network Database</th>
+        <td></td>
+      </tr>
+    </table>
+    <table id="wlan-client-network-scan">
+      <tr>
+        <th>Other WLAN Networks</th>
+        <td><span class="footer-button" id="wlan-client-scan-button" onclick="scanResult()">Scan</span></td>
+      </tr>
+    </table>
+  </div>
+  <div id="wlan-ap-settings">
+    <table>
+      <tr>
+        <th>Access Point Settings</th>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Mac Address</td>
+        <td class="jsondata" data="conf.network.wlan.accessPoint.macAddress"></td>
+      </tr>
+      <tr>
+        <td>SSID</td>
+        <td><input type="text" id="wlan-ap-ssid" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.ssid"></td>
+      </tr>
+      <tr>
+        <td>Password</td>
+        <td><input type="text" minlength="8" id="wlan-ap-psk" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.psk"></td>
+      </tr>
+      <tr>
+        <td>IP Address</td>
+        <td><input type="text" minlength="7" maxlength="15" size="15" 
+          pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$" 
+          id="wlan-ap-ipaddress" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.ipAddress"></td>
+      </tr>
+      <tr>
+        <td>Subnet Mask</td>
+        <td><input type="text" minlength="7" maxlength="15" size="15" 
+          pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$" 
+          id="wlan-ap-subnet" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.subnetMask"></td>
+      </tr>
+      <tr>
+        <td>Gateway</td>
+        <td><input type="text" minlength="7" maxlength="15" size="15" 
+          pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$" 
+          id="wlan-ap-gateway" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.gateway"></td>
+      </tr>
+      <tr>
+        <td>Connections (max)</td>
+        <td><input type="number" id="wlan-ap-max-connections" min="0" max="250" maxlength="3" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.maxConnections"></td>
+      </tr>
+      <tr>
+        <td>Channel</td>
+        <td><input type="number" id="wlan-ap-channel" min="0" max="255" maxlength="3" onchange="dataChanged()"
+          class="jsondata" data="conf.network.wlan.accessPoint.channel"></td>
+      </tr>
+    </table>
+  </div>
+  <div id="mqtt-settings">
+    <h2>MQTT Settings</h2>
+    <table>
+      <tr>
+        <td>Enabled</td>
+        <td style="padding: 0px 16px 0px 16px">
+          <label class="switch">
+            <input type="checkbox" onchange="dataChanged()" class="jsondata" data="conf.services.mqtt.enabled">
+            <span class="slider"></span>
+          </label>
+        </td>
+      </tr>
+      <tr>
+        <td>Host Address</td>
+        <td><input type="text" id="mqtt-host" onchange="dataChanged()" 
+          class="jsondata" data="conf.services.mqtt.host"></td>
+      </tr>
+      <tr>
+        <td>Port</td>
+        <td><input type="number" id="mqtt-port" onchange="dataChanged()" 
+          class="jsondata" data="conf.services.mqtt.port"></td>
+      </tr>
+      <tr>
+        <td>Client ID</td>
+        <td><input type="text" id="mqtt-client-id" onchange="dataChanged()" 
+          class="jsondata" data="conf.services.mqtt.clientId"></td>
+      </tr>
+      <tr>
+        <td>Username</td>
+        <td><input type="text" id="mqtt-user-name" onchange="dataChanged()" 
+          class="jsondata" data="conf.services.mqtt.userName"></td>
+      </tr>
+      <tr>
+        <td>Password</td>
+        <td><input type="password" id="mqtt-user-psk" onchange="dataChanged()" minlength="8"
+          class="jsondata" data="conf.services.mqtt.psk"></td>
+      </tr>
+      <tr>
+        <td>Topic Name</td>
+        <td><input type="text" id="mqtt-topic" onchange="dataChanged()" 
+          class="jsondata" data="conf.services.mqtt.topic"></td>
+      </tr>
+    </table>
+  </div>
+  <div id="ota-settings">
+    <h2>Firmware Update</h2>
+    <table>
+      <tr>
+        <td>Firmware File</td>
+        <td>
+          <form method='POST' action='/update' enctype='multipart/form-data'>
+            <input style="margin: 0px 10px 0px 10px;" type='file' name='update' accept=".bin" onchange="updateFormChanged()">
+            <input id="update-button" class="footer-button" style="display: none;" type='submit' value='Update'>
+          </form>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div id="about">
+    <h2>About this sensor</h2>
+  </div>
+  <p>Copyright Robert Krahl 2021</p>
+  <div style="padding-bottom: 100px;"></div>
+</div>
+
+<div class="footer">
+  <button class="footer-button" id="button-reboot" onclick="rebootDevice()">Reboot</button>
+  <button class="footer-button" id="button-apply" disabled onclick="applyConf()">Apply</button>
+</div>
+
+<script>
+var conf = undefined;
+var clientDatabase = undefined;
+
+function getMeta(metaName) {
+  const metas = document.getElementsByTagName('meta');
+
+  for (let i = 0; i < metas.length; i++) {
+    if (metas[i].getAttribute('name') === metaName) {
+      return metas[i].getAttribute('content');
+    }
+  }
+
+  return '';
+}
+
+function openDialog(content) {
+  if(content == undefined)
+    return;
+
+    var modal = document.getElementById("modal-dialog");
+  var dialogContent = document.getElementById("dialog-content");
+  dialogContent.appendChild(content);
+  modal.style.display = "block";
+
+  var span = document.getElementsByClassName("close")[0];
+  
+  span.onclick = function() {
+    closeDialog();
+  }
+
+  window.onclick = function(event) {
+      if (event.target == modal) {
+        closeDialog();
+      }
+  }
+}
+
+function closeDialog() {
+  var modal = document.getElementById("modal-dialog");
+  document.getElementById("dialog-content").innerHTML = "";
+  modal.style.display = "none";
+}
+
+function bindJsonData() {
+  const jsondata = document.querySelectorAll('.jsondata');
+  jsondata.forEach(jsondata => {
+    if((jsondata.nodeName == "INPUT") || (jsondata.nodeName == "SELECT")) {
+      if(jsondata.type == "checkbox") {
+          jsondata.checked = eval(jsondata.getAttribute("data"));
+      }
+      else if(jsondata.type == "password") {
+        if(eval(jsondata.getAttribute("data") != "")) {
+          jsondata.placeholder = "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022";
+        }
+        jsondata.value = "";
+      }
+      else {
+        jsondata.value = eval(jsondata.getAttribute("data"));
+      }
+    }
+    else {
+      jsondata.innerHTML = eval(jsondata.getAttribute("data"));
+    }
+  })
+}
+
+function getBindJsonData() {
+  const jsondata = document.querySelectorAll('.jsondata');
+  jsondata.forEach(jsondata => {
+    if(jsondata.nodeName == "INPUT") {
+      if(jsondata.type == "checkbox") {
+        eval(jsondata.getAttribute("data") + "=" + jsondata.checked);
+      }
+      else if(jsondata.type == "number") {
+        eval(jsondata.getAttribute("data") + "=" + jsondata.value);
+      }
+      else if(jsondata.type == "password") {
+        if(jsondata.value != "") {
+          eval(jsondata.getAttribute("data") + "='" + btoa(jsondata.value) + "'");
+        }
+      }
+      else {
+        eval(jsondata.getAttribute("data") + "='" + jsondata.value + "'");
+      }
+    }
+    else if (jsondata.nodeName == "SELECT") {
+      eval(jsondata.getAttribute("data") + "=" + jsondata.value);
+    }
+  })
+}
+
+function ready(callback){
+    if (document.readyState!='loading') callback();
+    else if (document.addEventListener) document.addEventListener('DOMContentLoaded', callback);
+    else document.attachEvent('onreadystatechange', function(){
+        if (document.readyState=='complete') callback();
+    });
+}
+
+ready(function(){
+  fetch("./device.json").then(response => {
+    if (!response.ok) {
+        throw new Error("HTTP error " + response.status);
+    }
+    return response.json();
+  })
+  .then(json => {
+    console.log(json);
+    conf = json;
+
+    conf.system.version.website = getMeta('version');
+    bindJsonData();
+    
+    changeWlanMode(conf.network.wlan.mode);
+
+    if(!conf.network.wlan.canDisable) {
+      document.getElementById("wlan-switch").setAttribute("disabled", "");
+      document.getElementById("wlan-slider").setAttribute("disabled", "");
+    }
+    
+    clientDatabase = new wlanClientList(conf.network.wlan.clients, conf.network.wlan.clientLimit);
+    clientDatabase.init();
+  })
+  .catch(err => {
+       console.log(err);
+   });
+});
+
+addEventListener('load', (event) => {
+    startSensorValues();
+});
+addEventListener('unload', (event) => {
+    stopSensorValues();
+});
+
+function changeWlanMode(index) {
+  var wlanClientSettings = document.getElementById("wlan-client-settings");
+  var wlanApSettings = document.getElementById("wlan-ap-settings");
+  var wlanScanButton = document.getElementById("wlan-client-scan-button");
+  var connectedTable = document.getElementById("connected-table");
+
+
+  switch(index) {
+    case 0:
+      wlanClientSettings.style.display = "block";
+      wlanApSettings.style.display = "none";
+      wlanScanButton.removeAttribute("disabled");
+      connectedTable.style.display = "table";
+      break;
+    case 1:
+      wlanClientSettings.style.display = "none";
+      wlanApSettings.style.display = "block";
+      wlanScanButton.setAttribute("disabled", "");
+      connectedTable.style.display = "none";
+      break;
+    default:
+      wlanClientSettings.style.display = "block";
+      wlanApSettings.style.display = "block";
+      wlanScanButton.removeAttribute("disabled");
+      connectedTable.style.display = "table";
+      break;
+  }
+}
+
+function changeWlanEnabled(enabled) {
+  var wlanClientSettings = document.getElementById("wlan-client-settings");
+  var wlanApSettings = document.getElementById("wlan-ap-settings");
+  if(!enabled) {
+    wlanClientSettings.style.display = "none";
+    wlanApSettings.style.display = "none";
+  }
+  else {
+    changeWlanMode(conf.network.wlan.mode);
+  }
+}
+
+function wlanModeChanged(index) {
+  changeWlanMode(index);
+  conf.network.wlan.mode = index;
+  dataChanged();
+}
+
+function wlanEnableChanged(enabled) {
+  changeWlanEnabled(enabled);
+  conf.network.wlan.enabled = enabled;
+  dataChanged();
+}
+
+function updateFormChanged() {
+  var updateButton = document.getElementById("update-button");
+  updateButton.style.display = "block";
+}
+
+function navSetResponsive() {
+  var x = document.getElementById("myTopnav");
+  if (x.className === "sidebar") {
+    x.className += " responsive";
+  } 
+  else {
+    x.className = "sidebar";
+  }
+}
+
+var dataHasChanged = false;
+
+function dataChanged() {
+  dataHasChanged = true;
+  var applyButton = document.getElementById("button-apply");
+  if (applyButton.hasAttribute("disabled")) {
+    applyButton.removeAttribute("disabled")
+    applyButton.style.display = "block";
+  }
+}
+
+window.onbeforeunload = function() {
+  if(dataHasChanged) {
+    return "Data will be lost if you leave the page, are you sure?";
+  }
+};
+
+function applyConf() {
+
+  getBindJsonData();
+
+  if(conf == undefined)
+    reutrn;
+
+  var confString = JSON.stringify(conf);
+  console.log("Config to write:\n" +  confString);
+
+  var xmlhttp = new XMLHttpRequest();
+
+  xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState != 4) {
+        return
+    }
+    if (xmlhttp.status >= 200 && xmlhttp.status < 300) {
+        console.log(xmlhttp.responseText);
+        if(xmlhttp.responseText.result = true) {
+          console.log("Writing config succedded");
+          var applyButton = document.getElementById("button-apply");
+          applyButton.setAttribute("disabled", "");
+          applyButton.style.display = "none";
+          dataHasChanged = false;
+          alert("Changing Config requires reboot!");
+        }
+        else {
+          alert("Writing config failed! " + xmlhttp.responseText.error);
+        }
+    }
+    else {
+        console.error("Write config XHR ERR :->", xmlhttp.status, xmlhttp.responseText);
+    }
+  }
+  var theUrl = "/writeConfig";
+  xmlhttp.open("POST", theUrl);
+  xmlhttp.setRequestHeader("Content-Type", "application/json");
+  xmlhttp.send(confString);
+}
+
+function rebootDevice() {
+  ajaxJson("GET", "reboot", function (c) {
+    if(c.result = false) {
+      console.error(c.result.error);
+      alert("Could not reboot! " + c.result.error);
+    }
+  }, function (b, a) {
+      alert("Could not reboot!");
+  })
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,65 @@
+{
+	"device": {
+		"name": "Soil Moisture Sensor A",
+		"model": "SMS-A"
+	},
+	"system": {
+		"architecture": "Harvard",
+		"name": "esp8266",
+		"serialNumber" : "0",
+		"flashSize" : "0 MB",
+		"flashSpeed" : "0 MHz",
+		"cpuSpeed" : "0 MHz",
+		"heapFree" : "0 MB",
+		"version": {
+			"firmware": "0",
+			"website": "0",
+			"boot" : "0"
+		}
+	},
+	"network": {
+		"hostname": "sm-sensor",
+		"adapterCount": 1,
+		"ipv6Enabled": false,
+		"dnsHosts": "",
+		"wlan":	{
+			"id": "wlan0",
+			"enabled": true,
+			"canDisable": false,
+			"macAddress": "",
+			"mode": 1,
+			"accessPoint":	{
+				"macAddress": "",
+				"ipAddress": "192.168.4.1",
+				"subnetMask": "255.255.255.0",
+				"gateway" : "192.168.4.1",
+				"ssid":	"SoilSensor",
+				"psk": "12345678",
+				"channel": 6,
+				"maxConnections": 5
+			},
+			"clientLimit": 2,
+			"connectedAp": "",
+			"dhcpAddress": "",
+			"dhcpSubnetMask": "",
+			"clients": []
+		}	
+	},
+	"services": {
+		"mqtt": {
+			"enabled": false,
+			"port": 1880,
+			"host" : "",
+			"clientId" : "",
+			"userName": "mosquitto",
+			"psk": "",
+			"topic": "soil"
+		}, 
+		"serial": {
+			"enabled": true
+		},
+		"sleep" : {
+			"interval": 0
+		}
+	}
+}
